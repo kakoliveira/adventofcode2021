@@ -1,4 +1,3 @@
-# Adventofcode2021
+# AdventOfCode2021
 
-**TODO: Add description**
-
+Umbrella app with solutions for https://adventofcode.com/
