@@ -12,27 +12,27 @@ defmodule UtilTest do
       assert Util.safe_to_integer("2") == 2
     end
 
-    test "with '' returns ''" do
-      assert Util.safe_to_integer("") |> is_nil()
+    test "with '' returns nil" do
+      refute Util.safe_to_integer("")
     end
 
-    test "with '' and 0 returns 0" do
+    test "with '' with default" do
       assert Util.safe_to_integer("", 0) == 0
     end
 
-    test "with nil returns ''" do
-      assert Util.safe_to_integer(nil) |> is_nil()
+    test "with nil returns nil" do
+      refute Util.safe_to_integer(nil)
     end
 
-    test "with nil and 0 returns 0" do
+    test "with nil and default 0 returns 0" do
       assert Util.safe_to_integer(nil, 0) == 0
     end
 
-    test "with :atom returns ''" do
-      assert Util.safe_to_integer(:atom) |> is_nil()
+    test "with :atom returns nil" do
+      refute Util.safe_to_integer(:atom)
     end
 
-    test "with :atom and 0 returns 0" do
+    test "with :atom and default 0 returns 0" do
       assert Util.safe_to_integer(:atom, 0) == 0
     end
   end
