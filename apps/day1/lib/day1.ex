@@ -5,6 +5,12 @@ defmodule Day1 do
 
   defguard has_increased_depth?(previous_depth, current_depth) when current_depth > previous_depth
 
+  @doc """
+      * `:part` - Possible values: `1` or `2`. Represents both parts of the puzzle.
+      * `:file_path` - When defined, measurements are read from this file instead of the next option.
+      * `:measurements` - List of measurements.
+  """
+  @spec solve(Keyword.t()) :: integer()
   def solve(part: part, file_path: file_path) do
     measurements = read_measurements(file_path)
 
@@ -58,15 +64,6 @@ defmodule Day1 do
     |> Map.get(:number_of_increases)
   end
 
-  defp reduce_number_of_increases(
-         current_measurement,
-         %{
-           previous_measurement: nil
-         } = state
-       ) do
-    update_previous_measurement(state, current_measurement)
-  end
-
   defp reduce_number_of_increases(current_measurement, state) do
     state
     |> update_number_of_increases(current_measurement)
@@ -79,7 +76,8 @@ defmodule Day1 do
          } = state,
          current_measurement
        )
-       when has_increased_depth?(previous_measurement, current_measurement) do
+       when not is_nil(previous_measurement) and
+              has_increased_depth?(previous_measurement, current_measurement) do
     %{state | number_of_increases: state.number_of_increases + 1}
   end
 
