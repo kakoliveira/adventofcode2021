@@ -5,14 +5,20 @@ defmodule Day1 do
 
   defguard has_increased_depth?(previous_depth, current_depth) when current_depth > previous_depth
 
-  def solve(part: 1, file_path: file_path) do
+  def solve(part: part, file_path: file_path) do
     measurements = read_measurements(file_path)
 
-    solve(part: 1, measurements: measurements)
+    solve(part: part, measurements: measurements)
   end
 
   def solve(part: 1, measurements: measurements) do
     calculate_number_of_increases(measurements)
+  end
+
+  def solve(part: 2, measurements: measurements) do
+    measurements
+    |> arranje_with_sliding_window(size: 3)
+    |> calculate_number_of_increases()
   end
 
   defp read_measurements(file_path) do
@@ -20,6 +26,25 @@ defmodule Day1 do
     |> FileReader.read()
     |> Enum.map(&Util.safe_to_integer/1)
     |> FileReader.clean_content()
+  end
+
+  defp arranje_with_sliding_window(measurements, size: window_size)
+       when length(measurements) < window_size do
+    []
+  end
+
+  defp arranje_with_sliding_window(measurements, size: window_size) do
+    new_measurement = calculate_new_measurement(measurements, window_size)
+
+    remaining_measurements = Enum.drop(measurements, 1)
+
+    [new_measurement] ++ arranje_with_sliding_window(remaining_measurements, size: window_size)
+  end
+
+  defp calculate_new_measurement(measurements, window_size) do
+    measurements
+    |> Enum.take(window_size)
+    |> Enum.sum()
   end
 
   defp calculate_number_of_increases(measurements) do
