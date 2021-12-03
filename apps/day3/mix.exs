@@ -26,7 +26,6 @@ defmodule Day3.MixProject do
   defp deps do
     [
       {:file_reader, in_umbrella: true}
-      # {:util, in_umbrella: true}
     ]
   end
 end
