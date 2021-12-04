@@ -15,12 +15,12 @@ defmodule Day4 do
     solve(part: part, bingo: bingo)
   end
 
-  def solve(part: 1, bingo: [number_sequence | boards]) do
+  def solve(part: part, bingo: [number_sequence | boards]) do
     number_sequence = parse_number_sequence(number_sequence)
     boards = parse_boards(boards)
 
     %{current_number: current_number, winning_board: winning_board} =
-      bingo(boards, number_sequence)
+      bingo(boards, number_sequence, win_last: part == 2)
 
     unmarked_numbers = get_unmarked_numbers(winning_board)
 
@@ -44,19 +44,39 @@ defmodule Day4 do
     |> Enum.to_list()
   end
 
-  defp bingo(boards, [number | number_sequence]) do
-    boards = Enum.map(boards, &Board.apply_number(&1, number))
+  defp bingo(boards, [number | number_sequence], opts) do
+    updated_boards =
+      boards
+      |> Enum.map(&Board.apply_number(&1, number))
+      |> Enum.map(&Board.bingo?/1)
 
-    winning_board = Enum.find(boards, &Board.bingo?/1)
+    winning_board = find_winning_board(boards, updated_boards, opts)
 
     if is_nil(winning_board) do
-      bingo(boards, number_sequence)
+      bingo(updated_boards, number_sequence, opts)
     else
       %{current_number: number, winning_board: winning_board}
     end
   end
 
-  defp get_unmarked_numbers(board) do
+  defp find_winning_board(boards, updated_boards, win_last: true) do
+    num_boards = length(boards)
+    num_boards_with_bingo = Enum.count(boards, & &1.bingo)
+
+    new_num_boards_with_bingo = Enum.count(updated_boards, & &1.bingo)
+
+    if num_boards_with_bingo + 1 == num_boards and new_num_boards_with_bingo == num_boards do
+      last_winning_board_index = Enum.find_index(boards, &(&1.bingo == false))
+
+      Enum.at(updated_boards, last_winning_board_index)
+    end
+  end
+
+  defp find_winning_board(_boards, updated_boards, _opts) do
+    Enum.find(updated_boards, & &1.bingo)
+  end
+
+  defp get_unmarked_numbers(%{board: board}) do
     board
     |> Enum.flat_map(fn line ->
       Enum.reject(line, fn number ->

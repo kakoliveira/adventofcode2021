@@ -3,32 +3,45 @@ defmodule Number do
 end
 
 defmodule Board do
+  defstruct board: nil, bingo: false
+
   def new(board_list) do
-    board_list
-    |> Enum.map(fn line ->
-      line
-      |> String.split(" ", trim: true)
-      |> Enum.map(fn number ->
-        %Number{number: number}
+    board =
+      board_list
+      |> Enum.map(fn line ->
+        line
+        |> String.split(" ", trim: true)
+        |> Enum.map(fn number ->
+          %Number{number: number}
+        end)
       end)
-    end)
+
+    %Board{board: board}
   end
 
-  def apply_number(board, number) do
-    board
-    |> Enum.map(fn line ->
-      Enum.map(line, fn %Number{number: board_number, marked: marked} ->
-        %Number{number: board_number, marked: board_number == number || marked}
+  def apply_number(%{board: board_value} = board, number) do
+    updated_board =
+      board_value
+      |> Enum.map(fn line ->
+        Enum.map(line, fn %Number{number: board_number, marked: marked} ->
+          %Number{number: board_number, marked: board_number == number || marked}
+        end)
       end)
-    end)
+
+    %{board | board: updated_board}
   end
 
-  def bingo?(board) do
-    if horizontal_bingo?(board) do
-      true
-    else
-      vertical_bingo?(board)
-    end
+  def bingo?(%Board{bingo: true} = board), do: board
+
+  def bingo?(%{board: board_value} = board) do
+    bingo =
+      if horizontal_bingo?(board_value) do
+        true
+      else
+        vertical_bingo?(board_value)
+      end
+
+    %{board | bingo: bingo}
   end
 
   defp horizontal_bingo?(board) do
