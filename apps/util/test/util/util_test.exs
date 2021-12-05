@@ -44,4 +44,26 @@ defmodule UtilTest do
       assert Util.manhattan_distance({10, 1}, {20, 2}) == 11
     end
   end
+
+  describe "matrix_column_size/1" do
+    test "gets matrix column size" do
+      matrix = [
+        [1, 2, 3],
+        [1, 2, 3]
+      ]
+
+      assert Util.matrix_column_size(matrix) == 3
+    end
+  end
+
+  describe "fetch_matrix_column/2" do
+    test "gets matrix column" do
+      matrix = [
+        [1, 2, 3],
+        [1, 2, 3]
+      ]
+
+      assert Util.fetch_matrix_column(matrix, 1) == [2, 2]
+    end
+  end
 end

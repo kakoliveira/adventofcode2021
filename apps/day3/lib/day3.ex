@@ -55,19 +55,14 @@ defmodule Day3 do
 
   defp get_last_column_index(binary_matrix) do
     binary_matrix
-    |> List.first()
-    |> length()
+    |> Util.matrix_column_size()
     |> Kernel.-(1)
   end
 
   defp get_column_frequencies(binary_matrix, column) do
     binary_matrix
-    |> fetch_column(column)
+    |> Util.fetch_matrix_column(column)
     |> Enum.frequencies()
-  end
-
-  defp fetch_column(matrix, column) do
-    Enum.map(matrix, &Enum.at(&1, column))
   end
 
   defp update_state(state, num_zeros, num_ones) do
