@@ -38,7 +38,7 @@ defmodule Day5 do
       discard_diagonals: true ->
         discard_diagonal_vent_lines(vent_lines)
 
-      _ ->
+      _opts ->
         vent_lines
     end
   end

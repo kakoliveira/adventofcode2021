@@ -5,9 +5,12 @@ defmodule VentLine do
 
   defstruct [:origin_x, :origin_y, :target_x, :target_y]
 
+  @type t :: %VentLine{}
+
   @doc """
     Builds a VentLine struct from a string
   """
+  @spec new(String.t() | list(String.t())) :: t()
   def new(line_segment) when is_binary(line_segment) do
     line_segment
     |> String.split(" -> ", trim: true)
@@ -30,6 +33,7 @@ defmodule VentLine do
   @doc """
     Verifies if the vent line is diagonal
   """
+  @spec is_diagonal?(t()) :: boolean()
   def is_diagonal?(vent_line) do
     not is_horizontal?(vent_line) and not is_vertical?(vent_line)
   end
@@ -42,13 +46,19 @@ defmodule VentLine do
     origin_x == target_x
   end
 
+  @doc """
+    Generates all the points that belong to the given vent line
+  """
+  @spec generate_points(t()) :: list(tuple())
   def generate_points(vent_line) do
-    if is_diagonal?(vent_line) do
-      diagonal_generate_points(vent_line)
-    else
-      naive_generate_points(vent_line)
-    end
-    |> List.flatten()
+    points =
+      if is_diagonal?(vent_line) do
+        diagonal_generate_points(vent_line)
+      else
+        naive_generate_points(vent_line)
+      end
+
+    List.flatten(points)
   end
 
   defp naive_generate_points(%VentLine{

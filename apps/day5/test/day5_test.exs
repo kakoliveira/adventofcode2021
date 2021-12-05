@@ -47,7 +47,7 @@ defmodule Day5Test do
     test "challange" do
       file_path = Path.join(File.cwd!(), "input.txt")
 
-      assert 22083 == Day5.solve(part: 2, file_path: file_path)
+      assert 22_083 == Day5.solve(part: 2, file_path: file_path)
     end
   end
 end
