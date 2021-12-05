@@ -5,6 +5,9 @@ defmodule VentLine do
 
   defstruct [:origin_x, :origin_y, :target_x, :target_y]
 
+  @doc """
+    Builds a VentLine struct from a string
+  """
   def new(line_segment) when is_binary(line_segment) do
     line_segment
     |> String.split(" -> ", trim: true)
@@ -24,25 +27,67 @@ defmodule VentLine do
     |> Enum.map(&Util.safe_to_integer/1)
   end
 
-  def is_horizontal?(%VentLine{origin_y: origin_y, target_y: target_y}) do
+  @doc """
+    Verifies if the vent line is diagonal
+  """
+  def is_diagonal?(vent_line) do
+    not is_horizontal?(vent_line) and not is_vertical?(vent_line)
+  end
+
+  defp is_horizontal?(%VentLine{origin_y: origin_y, target_y: target_y}) do
     origin_y == target_y
   end
 
-  def is_vertical?(%VentLine{origin_x: origin_x, target_x: target_x}) do
+  defp is_vertical?(%VentLine{origin_x: origin_x, target_x: target_x}) do
     origin_x == target_x
   end
 
-  def generate_points(%VentLine{
-        origin_x: origin_x,
-        origin_y: origin_y,
-        target_x: target_x,
-        target_y: target_y
-      }) do
+  def generate_points(vent_line) do
+    if is_diagonal?(vent_line) do
+      diagonal_generate_points(vent_line)
+    else
+      naive_generate_points(vent_line)
+    end
+    |> List.flatten()
+  end
+
+  defp naive_generate_points(%VentLine{
+         origin_x: origin_x,
+         origin_y: origin_y,
+         target_x: target_x,
+         target_y: target_y
+       }) do
     for x <- origin_x..target_x do
       for y <- origin_y..target_y do
         {x, y}
       end
     end
-    |> List.flatten()
+  end
+
+  defp diagonal_generate_points(%VentLine{
+         origin_x: origin_x,
+         origin_y: origin_y,
+         target_x: target_x,
+         target_y: target_y
+       }) do
+    delta_x = target_x - origin_x
+    delta_y = target_y - origin_y
+
+    if abs(delta_x) !== abs(delta_y) do
+      raise ArgumentError
+    end
+
+    Enum.map(
+      0..abs(delta_x),
+      &{apply_delta(origin_x, &1, delta_x), apply_delta(origin_y, &1, delta_y)}
+    )
+  end
+
+  defp apply_delta(coordinate, shift, orientation) when orientation >= 0 do
+    coordinate + shift
+  end
+
+  defp apply_delta(coordinate, shift, _orientation) do
+    coordinate - shift
   end
 end

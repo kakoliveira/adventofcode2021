@@ -15,11 +15,11 @@ defmodule Day5 do
     solve(part: part, vent_lines: vent_lines)
   end
 
-  def solve(part: 1, vent_lines: vent_lines) do
+  def solve(part: part, vent_lines: vent_lines) do
     vent_lines
-    |> parse_vent_lines()
-    |> discard_diagonal_vent_lines()
-    |> get_intercting_points()
+    |> parse_vent_lines(discard_diagonals: part == 1)
+    |> get_points()
+    |> Enum.to_list()
     |> Enum.frequencies()
     |> Enum.filter(fn {_key, value} -> value >= 2 end)
     |> Enum.count()
@@ -31,17 +31,23 @@ defmodule Day5 do
     |> FileReader.clean_content()
   end
 
-  defp parse_vent_lines(vent_lines) do
-    Enum.map(vent_lines, &VentLine.new/1)
+  defp parse_vent_lines(vent_lines, opts) do
+    vent_lines = Stream.map(vent_lines, &VentLine.new/1)
+
+    case opts do
+      discard_diagonals: true ->
+        discard_diagonal_vent_lines(vent_lines)
+
+      _ ->
+        vent_lines
+    end
   end
 
   defp discard_diagonal_vent_lines(vent_lines) do
-    Enum.filter(vent_lines, fn vent_line ->
-      VentLine.is_horizontal?(vent_line) or VentLine.is_vertical?(vent_line)
-    end)
+    Stream.reject(vent_lines, &VentLine.is_diagonal?/1)
   end
 
-  defp get_intercting_points(vent_lines) do
-    Enum.flat_map(vent_lines, &VentLine.generate_points/1)
+  defp get_points(vent_lines) do
+    Stream.flat_map(vent_lines, &VentLine.generate_points/1)
   end
 end
