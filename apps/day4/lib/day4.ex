@@ -45,10 +45,7 @@ defmodule Day4 do
   end
 
   defp bingo(boards, [number | number_sequence], opts) do
-    updated_boards =
-      boards
-      |> Enum.map(&Board.apply_number(&1, number))
-      |> Enum.map(&Board.bingo?/1)
+    updated_boards = run_number_on_boards(boards, number)
 
     winning_board = find_winning_board(boards, updated_boards, opts)
 
@@ -59,32 +56,42 @@ defmodule Day4 do
     end
   end
 
+  defp run_number_on_boards(boards, number) do
+    boards
+    |> Enum.map(&Board.mark(&1, number))
+    |> Enum.map(&Board.bingo/1)
+  end
+
   defp find_winning_board(boards, updated_boards, win_last: true) do
     num_boards = length(boards)
-    num_boards_with_bingo = Enum.count(boards, & &1.bingo)
+    num_boards_with_bingo = count_boards_with_bingo(boards)
 
-    new_num_boards_with_bingo = Enum.count(updated_boards, & &1.bingo)
+    new_num_boards_with_bingo = count_boards_with_bingo(updated_boards)
 
     if num_boards_with_bingo + 1 == num_boards and new_num_boards_with_bingo == num_boards do
-      last_winning_board_index = Enum.find_index(boards, &(&1.bingo == false))
-
-      Enum.at(updated_boards, last_winning_board_index)
+      boards
+      |> Enum.find_index(&(not has_bingo?(&1)))
+      |> then(&Enum.at(updated_boards, &1))
     end
   end
 
   defp find_winning_board(_boards, updated_boards, _opts) do
-    Enum.find(updated_boards, & &1.bingo)
+    Enum.find(updated_boards, &has_bingo?/1)
   end
 
-  defp get_unmarked_numbers(%{board: board}) do
+  defp count_boards_with_bingo(boards) do
+    Enum.count(boards, &has_bingo?/1)
+  end
+
+  defp has_bingo?(%Board{bingo: bingo}), do: bingo
+
+  defp get_unmarked_numbers(%Board{board: board}) do
     board
-    |> Enum.flat_map(fn line ->
-      Enum.reject(line, fn number ->
-        number.marked
-      end)
-    end)
-    |> Enum.map(fn %{number: number} ->
-      Util.safe_to_integer(number)
-    end)
+    |> Enum.flat_map(&get_unmarked_numbers_on_line/1)
+    |> Enum.map(&Util.safe_to_integer(&1.number))
+  end
+
+  defp get_unmarked_numbers_on_line(board_line) do
+    Enum.reject(board_line, & &1.marked)
   end
 end

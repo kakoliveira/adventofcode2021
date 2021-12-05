@@ -58,7 +58,7 @@ defmodule BoardTest do
     end
   end
 
-  describe "apply_number/2" do
+  describe "mark/2" do
     test "applies number" do
       number = "12"
 
@@ -103,11 +103,11 @@ defmodule BoardTest do
         bingo: false
       }
 
-      assert ^expected_board = Board.apply_number(@board_example, number)
+      assert ^expected_board = Board.mark(@board_example, number)
     end
   end
 
-  describe "bingo?/1" do
+  describe "bingo/1" do
     test "with a board that has horizontal bingo" do
       board = [
         [
@@ -147,7 +147,7 @@ defmodule BoardTest do
         ]
       ]
 
-      assert %Board{board: ^board, bingo: true} = Board.bingo?(%Board{board: board, bingo: false})
+      assert %Board{board: ^board, bingo: true} = Board.bingo(%Board{board: board, bingo: false})
     end
 
     test "with a board that has vertigal bingo" do
@@ -189,19 +189,19 @@ defmodule BoardTest do
         ]
       ]
 
-      assert %Board{board: ^board, bingo: true} = Board.bingo?(%Board{board: board, bingo: false})
+      assert %Board{board: ^board, bingo: true} = Board.bingo(%Board{board: board, bingo: false})
     end
 
     test "with board that already bingoed" do
-      board = %{board: [], bingo: true}
+      board = %Board{board: [], bingo: true}
 
-      assert ^board = Board.bingo?(board)
+      assert ^board = Board.bingo(board)
     end
 
     test "with a board that does not have bingo" do
       expected_board = @board_example
 
-      assert ^expected_board = Board.bingo?(@board_example)
+      assert ^expected_board = Board.bingo(@board_example)
     end
   end
 end
