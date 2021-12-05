@@ -1,8 +1,16 @@
 defmodule Number do
+  @moduledoc """
+    Simple struct to keep state of a number in a bingo Board
+  """
+
   defstruct number: nil, marked: false
 end
 
 defmodule Board do
+  @moduledoc """
+    Simple struct to keep state of a bingo Board
+  """
+
   defstruct board: nil, bingo: false
 
   @type t :: %Board{}

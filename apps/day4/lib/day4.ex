@@ -45,7 +45,7 @@ defmodule Day4 do
   end
 
   defp bingo(boards, [number | number_sequence], opts) do
-    updated_boards = run_number_on_boards(boards, number)
+    updated_boards = Enum.map(boards, &run_number_on_board(&1, number))
 
     winning_board = find_winning_board(boards, updated_boards, opts)
 
@@ -56,10 +56,10 @@ defmodule Day4 do
     end
   end
 
-  defp run_number_on_boards(boards, number) do
-    boards
-    |> Enum.map(&Board.mark(&1, number))
-    |> Enum.map(&Board.bingo/1)
+  defp run_number_on_board(board, number) do
+    board
+    |> Board.mark(number)
+    |> Board.bingo()
   end
 
   defp find_winning_board(boards, updated_boards, win_last: true) do

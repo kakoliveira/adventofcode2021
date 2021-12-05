@@ -28,7 +28,7 @@ defmodule Day4Test do
     test "challange" do
       file_path = Path.join(File.cwd!(), "input.txt")
 
-      assert 46920 == Day4.solve(part: 1, file_path: file_path)
+      assert 46_920 == Day4.solve(part: 1, file_path: file_path)
     end
   end
 
@@ -59,7 +59,7 @@ defmodule Day4Test do
     test "challange" do
       file_path = Path.join(File.cwd!(), "input.txt")
 
-      assert 12635 == Day4.solve(part: 2, file_path: file_path)
+      assert 12_635 == Day4.solve(part: 2, file_path: file_path)
     end
   end
 end
