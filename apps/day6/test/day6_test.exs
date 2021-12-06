@@ -20,4 +20,18 @@ defmodule Day6Test do
       assert 365_131 == Day6.solve(part: 1, file_path: file_path, number_of_cycles: 80)
     end
   end
+
+  describe "solve part 2" do
+    test "base case" do
+      input = "3,4,3,1,2"
+
+      assert 26_984_457_539 == Day6.solve(part: 2, lanternfishes: input, number_of_cycles: 256)
+    end
+
+    # test "challange" do
+    #   file_path = Path.join(File.cwd!(), "input.txt")
+
+    #   assert 365_131 == Day6.solve(part: 2, file_path: file_path, number_of_cycles: 256)
+    # end
+  end
 end

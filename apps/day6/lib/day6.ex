@@ -7,7 +7,7 @@ defmodule Day6 do
 
   @growth_rate 2
 
-  @baby_to_parent_rate @growth_rate + @spawn_rate - 1
+  @baby_to_parent_rate @growth_rate + @spawn_rate
 
   @doc """
       * `:part` - Possible values: `1` or `2`. Represents both parts of the puzzle.
@@ -22,11 +22,10 @@ defmodule Day6 do
     solve(part: part, lanternfishes: lanternfishes, number_of_cycles: number_of_cycles)
   end
 
-  def solve(part: 1, lanternfishes: lanternfishes, number_of_cycles: number_of_cycles) do
+  def solve(part: _part, lanternfishes: lanternfishes, number_of_cycles: number_of_cycles) do
     lanternfishes
     |> parse_lanternfishes()
     |> simulate(number_of_cycles)
-    |> Enum.count()
   end
 
   defp read_lanternfishes_data(file_path) do
@@ -43,43 +42,54 @@ defmodule Day6 do
     |> Enum.to_list()
   end
 
-  defp simulate(lanternfishes, 0), do: lanternfishes
-
   defp simulate(lanternfishes, number_of_cycles) do
-    lanternfishes
-    |> elapse_cycle()
-    |> spawn_new_lanternfishes()
-    |> simulate(number_of_cycles - 1)
-  end
+    starting_config = Enum.frequencies(lanternfishes)
 
-  defp elapse_cycle(lanternfishes) do
-    Enum.map(lanternfishes, &(&1 - 1))
-  end
+    ending_config =
+      lanternfishes
+      |> Enum.uniq()
+      |> Enum.map(&compute_fish(&1, number_of_cycles))
 
-  defp spawn_new_lanternfishes(lanternfishes) do
-    {lanternfishes, number_of_babies} = check_parents(lanternfishes)
-
-    add_babies_to_school(lanternfishes, number_of_babies)
-  end
-
-  defp check_parents(lanternfishes) do
-    Enum.map_reduce(lanternfishes, 0, fn fish, num_of_babies ->
-      if fish == -1 do
-        {fish + @spawn_rate, num_of_babies + 1}
-      else
-        {fish, num_of_babies}
-      end
+    starting_config
+    |> Enum.map(fn {original_fish, multiplier} ->
+      List.keyfind(ending_config, original_fish, 0)
+      |> elem(1)
+      |> Kernel.*(multiplier)
     end)
+    |> Enum.sum()
   end
 
-  defp add_babies_to_school(lanternfishes, 0), do: lanternfishes
+  defp compute_fish(original_fish, number_of_cycles) do
+    babies = get_babies_birthdays(original_fish + 1, number_of_cycles)
 
-  defp add_babies_to_school(lanternfishes, number_of_babies) do
-    new_babies =
-      for _ <- 1..number_of_babies do
-        @baby_to_parent_rate
-      end
+    {original_fish,
+     1 +
+       length(babies) +
+       recursive_new_baby(babies, number_of_cycles)}
+  end
 
-    lanternfishes ++ new_babies
+  defp recursive_new_baby(parents, number_of_cycles) do
+    babies =
+      parents
+      |> Enum.map(&get_babies_birthdays(&1 + @baby_to_parent_rate, number_of_cycles))
+      |> List.flatten()
+
+    num_babies = length(babies)
+
+    if num_babies > 0 do
+      num_babies +
+        recursive_new_baby(babies, number_of_cycles)
+    else
+      num_babies
+    end
+  end
+
+  defp get_babies_birthdays(current_cycle, number_of_cycles)
+       when current_cycle > number_of_cycles do
+    []
+  end
+
+  defp get_babies_birthdays(current_cycle, number_of_cycles) do
+    [current_cycle] ++ get_babies_birthdays(current_cycle + @spawn_rate, number_of_cycles)
   end
 end
