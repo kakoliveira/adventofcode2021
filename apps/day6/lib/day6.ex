@@ -43,53 +43,29 @@ defmodule Day6 do
   end
 
   defp simulate(lanternfishes, number_of_cycles) do
-    starting_config = Enum.frequencies(lanternfishes)
-
-    ending_config =
-      lanternfishes
-      |> Enum.uniq()
-      |> Enum.map(&compute_fish(&1, number_of_cycles))
-
-    starting_config
-    |> Enum.map(fn {original_fish, multiplier} ->
-      List.keyfind(ending_config, original_fish, 0)
-      |> elem(1)
-      |> Kernel.*(multiplier)
+    lanternfishes
+    |> Enum.frequencies()
+    |> then(fn lanternfishes ->
+      Enum.reduce(1..number_of_cycles, lanternfishes, fn _day, lanternfishes ->
+        simulate(lanternfishes)
+      end)
     end)
-    |> Enum.sum()
+    |> Enum.reduce(0, fn {_age, count}, acc -> acc + count end)
   end
 
-  defp compute_fish(original_fish, number_of_cycles) do
-    babies = get_babies_birthdays(original_fish + 1, number_of_cycles)
-
-    {original_fish,
-     1 +
-       length(babies) +
-       recursive_new_baby(babies, number_of_cycles)}
+  # Taken from https://github.com/DFilipeS/advent-of-code-2021/blob/main/day6/lib/day6.ex#L48
+  # Thanks @DFilipeS
+  defp simulate(fishes) do
+    Enum.reduce(fishes, %{}, &simulate_day/2)
   end
 
-  defp recursive_new_baby(parents, number_of_cycles) do
-    babies =
-      parents
-      |> Enum.map(&get_babies_birthdays(&1 + @baby_to_parent_rate, number_of_cycles))
-      |> List.flatten()
-
-    num_babies = length(babies)
-
-    if num_babies > 0 do
-      num_babies +
-        recursive_new_baby(babies, number_of_cycles)
-    else
-      num_babies
-    end
+  defp simulate_day({0, count}, acc) do
+    acc
+    |> Map.update(@spawn_rate - 1, count, &(&1 + count))
+    |> Map.update(@baby_to_parent_rate - 1, count, &(&1 + count))
   end
 
-  defp get_babies_birthdays(current_cycle, number_of_cycles)
-       when current_cycle > number_of_cycles do
-    []
-  end
-
-  defp get_babies_birthdays(current_cycle, number_of_cycles) do
-    [current_cycle] ++ get_babies_birthdays(current_cycle + @spawn_rate, number_of_cycles)
+  defp simulate_day({age, count}, acc) do
+    Map.update(acc, age - 1, count, &(&1 + count))
   end
 end
