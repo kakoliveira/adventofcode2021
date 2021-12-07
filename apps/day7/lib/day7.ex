@@ -39,15 +39,22 @@ defmodule Day7 do
   end
 
   defp calculate_fuel_usage(crab_positions, target_position, fuel_consumption: :constant) do
-    Enum.reduce(crab_positions, 0, fn crab_position, fuel ->
-      abs(crab_position - target_position) + fuel
-    end)
+    calculate_fuel_usage(crab_positions, target_position, &constant_consumption/2)
   end
 
   defp calculate_fuel_usage(crab_positions, target_position, fuel_consumption: :linear) do
+    calculate_fuel_usage(crab_positions, target_position, &linear_consumption/2)
+  end
+
+  defp calculate_fuel_usage(crab_positions, target_position, fuel_function)
+       when is_function(fuel_function, 2) do
     Enum.reduce(crab_positions, 0, fn crab_position, fuel ->
-      fuel + linear_consumption(crab_position, target_position)
+      fuel + fuel_function.(crab_position, target_position)
     end)
+  end
+
+  defp constant_consumption(crab_position, target_position) do
+    abs(crab_position - target_position)
   end
 
   defp linear_consumption(crab_position, target_position) do
@@ -57,32 +64,36 @@ defmodule Day7 do
   end
 
   defp calculate_best_horizontal_position(crab_positions, fuel_consumption: :constant) do
-    positions = Enum.sort(crab_positions)
-
-    calculate_median(positions, length(positions))
+    calculate_median(crab_positions)
   end
 
   defp calculate_best_horizontal_position(crab_positions, fuel_consumption: :linear) do
     calculate_media(crab_positions)
   end
 
-  defp calculate_median(positions, sample_size) when rem(sample_size, 2) == 0 do
-    mid_point = sample_size / 2
+  defp calculate_median(list) do
+    sorted_list = Enum.sort(list)
 
-    Enum.at(positions, floor(mid_point))
+    do_calculate_median(sorted_list, length(sorted_list))
   end
 
-  defp calculate_median(positions, sample_size) do
+  defp do_calculate_median(list, sample_size) when rem(sample_size, 2) == 0 do
     mid_point = sample_size / 2
 
-    (Enum.at(positions, floor(mid_point)) +
-       Enum.at(positions, ceil(mid_point))) / 2
+    Enum.at(list, floor(mid_point))
   end
 
-  defp calculate_media(crab_positions) do
-    num_positions = length(crab_positions)
+  defp do_calculate_median(list, sample_size) do
+    mid_point = sample_size / 2
 
-    crab_positions
+    (Enum.at(list, floor(mid_point)) +
+       Enum.at(list, ceil(mid_point))) / 2
+  end
+
+  defp calculate_media(list) do
+    num_positions = length(list)
+
+    list
     |> Enum.sum()
     |> Kernel./(num_positions)
     |> round(down_on_draw: true)
