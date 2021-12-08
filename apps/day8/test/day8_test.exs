@@ -49,7 +49,7 @@ defmodule Day8Test do
         "gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce"
       ]
 
-      assert 61229 == Day8.solve(part: 2, signal_patterns: input)
+      assert 61_229 == Day8.solve(part: 2, signal_patterns: input)
     end
 
     test "challange" do
@@ -59,7 +59,7 @@ defmodule Day8Test do
     end
   end
 
-  describe "decobe_output/2" do
+  describe "decode_output/2" do
     test "examples" do
       configuration = [
         {"d", :top},
@@ -71,7 +71,7 @@ defmodule Day8Test do
         {"c", :bottom}
       ]
 
-      assert 5353 == Day8.decobe_output(["cdfeb", "fcadb", "cdfeb", "cdbaf"], configuration)
+      assert 5353 == Day8.decode_output(["cdfeb", "fcadb", "cdfeb", "cdbaf"], configuration)
     end
   end
 end

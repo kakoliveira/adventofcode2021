@@ -11,8 +11,6 @@ defmodule Day8 do
   @bottom_right_display_segment :bottom_right
   @bottom_display_segment :bottom
 
-  @num_configurations 7
-
   @initial_configuration [
     {[], @top_display_segment},
     {[], @top_left_display_segment},
@@ -22,6 +20,8 @@ defmodule Day8 do
     {[], @bottom_right_display_segment},
     {[], @bottom_display_segment}
   ]
+
+  @num_configurations length(@initial_configuration)
 
   @length_5_criteria :length5
   @length_6_criteria :length6
@@ -92,7 +92,7 @@ defmodule Day8 do
   defp decode_signal({_pattern, output} = signal_pattern) do
     signal_pattern
     |> deduce_configuration()
-    |> then(&decobe_output(output, &1))
+    |> then(&decode_output(output, &1))
   end
 
   defp deduce_configuration({pattern, output}) do
@@ -111,106 +111,6 @@ defmodule Day8 do
       recursive_configuration_deduction(configuration, remaining_segments)
     end
   end
-
-  defp all_configs_are_set?(configuration) do
-    Enum.all?(configuration, fn {option, _key} ->
-      is_binary(option)
-    end)
-  end
-
-  defp recursive_configuration_deduction(configuration, remaining_segments) do
-    configuration
-    |> Enum.sort_by(
-      fn {possibilities, key} ->
-        if is_list(possibilities) do
-          {length(possibilities), key}
-        else
-          # this one is picked, move it to the end
-          {@num_configurations + 1, key}
-        end
-      end,
-      fn {length1, key1}, {length2, key2} ->
-        if length1 == length2 do
-          sort_config_keys(key1, key2)
-        else
-          length1 <= length2
-        end
-      end
-    )
-    |> fix_possibility(remaining_segments)
-    |> deduce_configuration(remaining_segments)
-  end
-
-  defp fix_possibility([{possibilities, key} | _rest] = configuration, remaining_segments) do
-    fixed_possibility = pick_possibility(possibilities, key, remaining_segments)
-
-    configuration
-    |> List.keyreplace(key, 1, {fixed_possibility, key})
-    |> Enum.map(&reject_possibility(&1, fixed_possibility))
-  end
-
-  # top -> all others must have the possibility || first
-  # top_right -> first
-  # top_left -> all 6 length must have it || first
-  # middle -> all 5 length must have it || first
-  # bottom_left -> first
-  # bottom_right -> all 6 length must have it || first
-  # bottom -> all others must have it || first
-  # this implies an order -> middle -> top_left, bottom_right -> top, bottom -> top_right, bottom
-  defp sort_config_keys(key1, key2) do
-    key1 <= key2
-  end
-
-  defp pick_possibility(possibilities, key, remaining_segments)
-       when key in [@top_display_segment, @bottom_display_segment] do
-    filter_possibilities(possibilities, @all_criterias, remaining_segments)
-  end
-
-  defp pick_possibility(possibilities, @middle_display_segment, remaining_segments) do
-    filter_possibilities(possibilities, [@length_5_criteria], remaining_segments)
-  end
-
-  defp pick_possibility(possibilities, key, remaining_segments)
-       when key in [@top_left_display_segment, @bottom_right_display_segment] do
-    filter_possibilities(possibilities, [@length_6_criteria], remaining_segments)
-  end
-
-  defp pick_possibility(possibilities, _key, _remaining_segments) do
-    List.first(possibilities)
-  end
-
-  defp filter_possibilities([possibility], _criteria_list, _remaining_segments),
-    do: possibility
-
-  defp filter_possibilities(possibilities, criteria_list, remaining_segments) do
-    Enum.reduce(criteria_list, possibilities, fn criteria, possibilities ->
-      Enum.filter(possibilities, fn possibility ->
-        case criteria do
-          @length_5_criteria ->
-            all_remaining_segments?(remaining_segments, 5, possibility)
-
-          @length_6_criteria ->
-            all_remaining_segments?(remaining_segments, 6, possibility)
-
-          _ ->
-            true
-        end
-      end)
-    end)
-    |> List.first()
-  end
-
-  defp all_remaining_segments?(remaining_segments, target_length, possibility) do
-    remaining_segments
-    |> Enum.filter(&(String.length(&1) == target_length))
-    |> Enum.all?(&String.contains?(&1, possibility))
-  end
-
-  defp reject_possibility({possibilities, key}, fixed_possibility) when is_list(possibilities) do
-    {Enum.reject(possibilities, &(&1 == fixed_possibility)), key}
-  end
-
-  defp reject_possibility(config_item, _fixed_possibility), do: config_item
 
   defp apply_unique_segments(configuration, unique_segments) do
     Enum.reduce(unique_segments, configuration, fn unique_segment, config ->
@@ -297,10 +197,118 @@ defmodule Day8 do
     List.keyreplace(configuration, key, 1, {remaining_possibilities, key})
   end
 
-  def decobe_output(output, configuration) when length(configuration) == @num_configurations do
+  defp all_configs_are_set?(configuration) do
+    Enum.all?(configuration, fn {option, _key} ->
+      is_binary(option)
+    end)
+  end
+
+  defp recursive_configuration_deduction(configuration, remaining_segments) do
+    configuration
+    |> sort_configuration()
+    |> fix_possibility(remaining_segments)
+    |> deduce_configuration(remaining_segments)
+  end
+
+  defp sort_configuration(configuration) do
+    Enum.sort_by(
+      configuration,
+      &sort_configuration_mapper/1,
+      &sort_configuration_sorter/2
+    )
+  end
+
+  defp sort_configuration_mapper({possibilities, key}) when is_list(possibilities) do
+    {length(possibilities), key}
+  end
+
+  defp sort_configuration_mapper({_possibilities, key}) do
+    # this one is picked, move it to the end
+    {@num_configurations + 1, key}
+  end
+
+  defp sort_configuration_sorter({length, key1}, {length, key2}) do
+    sort_config_keys(key1, key2)
+  end
+
+  defp sort_configuration_sorter({length1, _key1}, {length2, _key2}) do
+    length1 <= length2
+  end
+
+  defp fix_possibility([{possibilities, key} | _rest] = configuration, remaining_segments) do
+    fixed_possibility = pick_possibility(possibilities, key, remaining_segments)
+
+    configuration
+    |> List.keyreplace(key, 1, {fixed_possibility, key})
+    |> Enum.map(&reject_chosen_possibility(&1, fixed_possibility))
+  end
+
+  # top -> all others must have the possibility || first
+  # top_right -> first
+  # top_left -> all 6 length must have it || first
+  # middle -> all 5 length must have it || first
+  # bottom_left -> first
+  # bottom_right -> all 6 length must have it || first
+  # bottom -> all others must have it || first
+  # this implies an order -> middle -> top_left, bottom_right -> top, bottom -> top_right, bottom
+  defp sort_config_keys(key1, key2) do
+    key1 <= key2
+  end
+
+  defp pick_possibility(possibilities, key, remaining_segments)
+       when key in [@top_display_segment, @bottom_display_segment] do
+    filter_possibilities(possibilities, @all_criterias, remaining_segments)
+  end
+
+  defp pick_possibility(possibilities, @middle_display_segment, remaining_segments) do
+    filter_possibilities(possibilities, [@length_5_criteria], remaining_segments)
+  end
+
+  defp pick_possibility(possibilities, key, remaining_segments)
+       when key in [@top_left_display_segment, @bottom_right_display_segment] do
+    filter_possibilities(possibilities, [@length_6_criteria], remaining_segments)
+  end
+
+  defp pick_possibility(possibilities, _key, _remaining_segments) do
+    List.first(possibilities)
+  end
+
+  defp filter_possibilities([possibility], _criteria_list, _remaining_segments),
+    do: possibility
+
+  defp filter_possibilities(possibilities, criteria_list, remaining_segments) do
+    criteria_list
+    |> Enum.reduce(possibilities, &apply_criteria(&2, &1, remaining_segments))
+    |> List.first()
+  end
+
+  defp apply_criteria(possibilities, @length_5_criteria, remaining_segments) do
+    Enum.filter(possibilities, &all_remaining_segments?(remaining_segments, 5, &1))
+  end
+
+  defp apply_criteria(possibilities, @length_6_criteria, remaining_segments) do
+    Enum.filter(possibilities, &all_remaining_segments?(remaining_segments, 6, &1))
+  end
+
+  defp apply_criteria(possibilities, _criteria, _remaining_segments), do: possibilities
+
+  defp all_remaining_segments?(remaining_segments, target_length, possibility) do
+    remaining_segments
+    |> Enum.filter(&(String.length(&1) == target_length))
+    |> Enum.all?(&String.contains?(&1, possibility))
+  end
+
+  defp reject_chosen_possibility({possibilities, key}, fixed_possibility)
+       when is_list(possibilities) do
+    {Enum.reject(possibilities, &(&1 == fixed_possibility)), key}
+  end
+
+  defp reject_chosen_possibility(config_item, _fixed_possibility), do: config_item
+
+  @spec decode_output(list(String.t()), list(tuple())) :: integer()
+  def decode_output(output, configuration) when length(configuration) == @num_configurations do
     output
-    |> Enum.map(&decode_digit(&1, configuration))
-    |> Enum.join()
+    |> Enum.map_join(&decode_digit(&1, configuration))
     |> String.to_integer()
   end
 
