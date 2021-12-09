@@ -3,6 +3,12 @@ defmodule Day9 do
   Day 9 puzzle solutions
   """
 
+  # Guards
+  defguard first_column?(column_index) when column_index == 0
+  defguard last_column?(column_index, num_columns) when column_index == num_columns - 1
+  defguard first_row?(row_index) when row_index == 0
+  defguard last_row?(row_index, num_rows) when row_index == num_rows - 1
+
   @doc """
       * `:part` - Possible values: `1` or `2`. Represents both parts of the puzzle.
       * `:file_path` - When defined, the heightmap are read from this file instead of the next option.
@@ -68,13 +74,14 @@ defmodule Day9 do
     row
     |> Enum.with_index()
     |> Enum.reduce([], fn {height, column_index}, low_points ->
+      point = {height, row_index, column_index}
+
       if is_low_point?(
-           height,
+           point,
            row,
-           {row_index, column_index},
            heightmap_matrix_struct
          ) do
-        [{height, row_index, column_index}] ++ low_points
+        [point] ++ low_points
       else
         low_points
       end
@@ -82,51 +89,50 @@ defmodule Day9 do
   end
 
   defp is_low_point?(
-         height,
+         point,
          row,
-         {row_index, column_index},
          {heightmap_matrix, num_rows, num_columns}
        ) do
-    less_then_left?(height, column_index, row) and
-      less_than_right?(height, column_index, row, num_columns) and
-      less_than_bottom?(height, column_index, row_index, heightmap_matrix, num_rows) and
-      less_than_top?(height, column_index, row_index, heightmap_matrix, num_rows)
+    less_then_left?(point, row) and
+      less_than_right?(point, row, num_columns) and
+      less_than_down?(point, heightmap_matrix, num_rows) and
+      less_than_up?(point, heightmap_matrix, num_rows)
   end
 
-  defp less_then_left?(_height, 0, _row), do: true
+  defp less_then_left?({_height, _row_index, column_index}, _row)
+       when first_column?(column_index),
+       do: true
 
-  defp less_then_left?(height, column_index, row) do
+  defp less_then_left?({height, _row_index, column_index}, row) do
     height < Enum.at(row, column_index - 1)
   end
 
-  defp less_than_right?(_height, column_index, _row, num_columns)
-       when column_index == num_columns - 1,
+  defp less_than_right?({_height, _row_index, column_index}, _row, num_columns)
+       when last_column?(column_index, num_columns),
        do: true
 
-  defp less_than_right?(height, column_index, row, _num_columns) do
+  defp less_than_right?({height, _row_index, column_index}, row, _num_columns) do
     height < Enum.at(row, column_index + 1)
   end
 
-  defp less_than_bottom?(_height, _column_index, row_index, _heightmap_matrix, num_rows)
-       when row_index == num_rows - 1,
+  defp less_than_down?({_height, row_index, _column_index}, _heightmap_matrix, num_rows)
+       when last_row?(row_index, num_rows),
        do: true
 
-  defp less_than_bottom?(height, column_index, row_index, heightmap_matrix, _num_rows) do
-    value_bellow =
-      heightmap_matrix
-      |> Enum.at(row_index + 1)
-      |> Enum.at(column_index)
+  defp less_than_down?({height, row_index, column_index}, heightmap_matrix, _num_rows) do
+    {value_bellow, _row_index, _column_index} =
+      get_point(heightmap_matrix, row_index + 1, column_index)
 
     height < value_bellow
   end
 
-  defp less_than_top?(_height, _column_index, 0, _heightmap_matrix, _num_rows), do: true
+  defp less_than_up?({_height, row_index, _column_index}, _heightmap_matrix, _num_rows)
+       when first_row?(row_index),
+       do: true
 
-  defp less_than_top?(height, column_index, row_index, heightmap_matrix, _num_rows) do
-    value_above =
-      heightmap_matrix
-      |> Enum.at(row_index - 1)
-      |> Enum.at(column_index)
+  defp less_than_up?({height, row_index, column_index}, heightmap_matrix, _num_rows) do
+    {value_above, _row_index, _column_index} =
+      get_point(heightmap_matrix, row_index - 1, column_index)
 
     height < value_above
   end
@@ -150,7 +156,7 @@ defmodule Day9 do
     updated_basin
     |> append_flow(left_downward_flow(point, updated_basin, heightmap_matrix_struct))
     |> append_flow(right_downward_flow(point, updated_basin, heightmap_matrix_struct))
-    |> append_flow(top_downward_flow(point, updated_basin, heightmap_matrix_struct))
+    |> append_flow(up_downward_flow(point, updated_basin, heightmap_matrix_struct))
     |> append_flow(down_downward_flow(point, updated_basin, heightmap_matrix_struct))
   end
 
@@ -158,23 +164,22 @@ defmodule Day9 do
     Map.merge(new_points, basin)
   end
 
-  defp left_downward_flow({_height, _row_index, 0}, basin, _heightmap_matrix_struct), do: basin
+  defp left_downward_flow({_height, _row_index, column_index}, basin, _heightmap_matrix_struct)
+       when first_column?(column_index),
+       do: basin
 
   defp left_downward_flow(
          {height, row_index, column_index},
          basin,
          {heightmap_matrix, _num_rows, _num_columns} = heightmap_matrix_struct
        ) do
-    value_left =
-      heightmap_matrix
-      |> Enum.at(row_index)
-      |> Enum.at(column_index - 1)
-
-    if value_left != 9 and value_left > height do
-      find_basin({value_left, row_index, column_index - 1}, basin, heightmap_matrix_struct)
-    else
-      basin
-    end
+    heightmap_matrix
+    |> get_point(row_index, column_index - 1)
+    |> downward_flow(
+      height,
+      basin,
+      heightmap_matrix_struct
+    )
   end
 
   defp right_downward_flow(
@@ -182,7 +187,7 @@ defmodule Day9 do
          basin,
          {_heightmap_matrix, _num_rows, num_columns}
        )
-       when column_index == num_columns - 1,
+       when last_column?(column_index, num_columns),
        do: basin
 
   defp right_downward_flow(
@@ -190,16 +195,13 @@ defmodule Day9 do
          basin,
          {heightmap_matrix, _num_rows, _num_columns} = heightmap_matrix_struct
        ) do
-    value_right =
-      heightmap_matrix
-      |> Enum.at(row_index)
-      |> Enum.at(column_index + 1)
-
-    if value_right != 9 and value_right > height do
-      find_basin({value_right, row_index, column_index + 1}, basin, heightmap_matrix_struct)
-    else
-      basin
-    end
+    heightmap_matrix
+    |> get_point(row_index, column_index + 1)
+    |> downward_flow(
+      height,
+      basin,
+      heightmap_matrix_struct
+    )
   end
 
   defp down_downward_flow(
@@ -207,7 +209,7 @@ defmodule Day9 do
          basin,
          {_heightmap_matrix, num_rows, _num_columns}
        )
-       when row_index == num_rows - 1,
+       when last_row?(row_index, num_rows),
        do: basin
 
   defp down_downward_flow(
@@ -215,41 +217,59 @@ defmodule Day9 do
          basin,
          {heightmap_matrix, _num_rows, _num_columns} = heightmap_matrix_struct
        ) do
-    value_down =
-      heightmap_matrix
-      |> Enum.at(row_index + 1)
-      |> Enum.at(column_index)
-
-    if value_down != 9 and value_down > height do
-      find_basin({value_down, row_index + 1, column_index}, basin, heightmap_matrix_struct)
-    else
-      basin
-    end
+    heightmap_matrix
+    |> get_point(row_index + 1, column_index)
+    |> downward_flow(
+      height,
+      basin,
+      heightmap_matrix_struct
+    )
   end
 
-  defp top_downward_flow({_height, 0, _column_index}, basin, _heightmap_matrix_struct), do: basin
+  defp up_downward_flow({_height, row_index, _column_index}, basin, _heightmap_matrix_struct)
+       when first_row?(row_index),
+       do: basin
 
-  defp top_downward_flow(
+  defp up_downward_flow(
          {height, row_index, column_index},
          basin,
          {heightmap_matrix, _num_rows, _num_columns} = heightmap_matrix_struct
        ) do
-    value_top =
-      heightmap_matrix
-      |> Enum.at(row_index - 1)
-      |> Enum.at(column_index)
-
-    if value_top != 9 and value_top > height do
-      find_basin({value_top, row_index - 1, column_index}, basin, heightmap_matrix_struct)
-    else
-      basin
-    end
+    heightmap_matrix
+    |> get_point(row_index - 1, column_index)
+    |> downward_flow(
+      height,
+      basin,
+      heightmap_matrix_struct
+    )
   end
+
+  defp downward_flow(
+         {height, _row_index, _column_index} = point,
+         adjancent_height,
+         basin,
+         heightmap_matrix_struct
+       )
+       when height != 9 and height > adjancent_height do
+    find_basin(point, basin, heightmap_matrix_struct)
+  end
+
+  defp downward_flow(_point, _adjancent_height, basin, _heightmap_matrix_struct),
+    do: basin
 
   defp describe_heightmap_matrix(heightmap_matrix) do
     num_columns = Util.matrix_column_size(heightmap_matrix)
     num_rows = length(heightmap_matrix)
 
     {heightmap_matrix, num_rows, num_columns}
+  end
+
+  defp get_point(heightmap_matrix, row_index, column_index) do
+    height =
+      heightmap_matrix
+      |> Enum.at(row_index)
+      |> Enum.at(column_index)
+
+    {height, row_index, column_index}
   end
 end
