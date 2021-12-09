@@ -22,6 +22,22 @@ defmodule Day9 do
     |> calculate_risk_level()
   end
 
+  def solve(part: 2, heightmap: heightmap) do
+    heightmap_matrix = parse_matrix(heightmap)
+
+    heightmap_matrix
+    |> find_low_points()
+    |> get_basins(heightmap_matrix)
+    |> Enum.map(fn basin ->
+      basin
+      |> Map.keys()
+      |> length()
+    end)
+    |> Enum.sort(:desc)
+    |> Enum.take(3)
+    |> Enum.product()
+  end
+
   defp read_heightmap(file_path) do
     file_path
     |> FileReader.read()
@@ -39,14 +55,12 @@ defmodule Day9 do
   end
 
   defp find_low_points(heightmap_matrix) do
-    num_columns = Util.matrix_column_size(heightmap_matrix)
-
-    num_rows = length(heightmap_matrix)
+    heightmap_matrix_struct = describe_heightmap_matrix(heightmap_matrix)
 
     heightmap_matrix
     |> Enum.with_index()
     |> Enum.reduce([], fn row, low_points ->
-      find_low_points(row, {heightmap_matrix, num_rows, num_columns}) ++ low_points
+      find_low_points(row, heightmap_matrix_struct) ++ low_points
     end)
   end
 
@@ -60,7 +74,7 @@ defmodule Day9 do
            {row_index, column_index},
            heightmap_matrix_struct
          ) do
-        [height] ++ low_points
+        [{height, row_index, column_index}] ++ low_points
       else
         low_points
       end
@@ -119,7 +133,123 @@ defmodule Day9 do
 
   defp calculate_risk_level(low_points) do
     low_points
+    |> Enum.map(&elem(&1, 0))
     |> Enum.sum()
     |> Kernel.+(length(low_points))
+  end
+
+  defp get_basins(low_points, heightmap_matrix) do
+    heightmap_matrix_struct = describe_heightmap_matrix(heightmap_matrix)
+
+    Enum.map(low_points, &find_basin(&1, %{}, heightmap_matrix_struct))
+  end
+
+  defp find_basin({height, row_index, column_index} = point, basin, heightmap_matrix_struct) do
+    updated_basin = Map.put_new(basin, {row_index, column_index}, height)
+
+    updated_basin
+    |> append_flow(left_downward_flow(point, updated_basin, heightmap_matrix_struct))
+    |> append_flow(right_downward_flow(point, updated_basin, heightmap_matrix_struct))
+    |> append_flow(top_downward_flow(point, updated_basin, heightmap_matrix_struct))
+    |> append_flow(down_downward_flow(point, updated_basin, heightmap_matrix_struct))
+  end
+
+  defp append_flow(basin, new_points) do
+    Map.merge(new_points, basin)
+  end
+
+  defp left_downward_flow({_height, _row_index, 0}, basin, _heightmap_matrix_struct), do: basin
+
+  defp left_downward_flow(
+         {height, row_index, column_index},
+         basin,
+         {heightmap_matrix, _num_rows, _num_columns} = heightmap_matrix_struct
+       ) do
+    value_left =
+      heightmap_matrix
+      |> Enum.at(row_index)
+      |> Enum.at(column_index - 1)
+
+    if value_left != 9 and value_left > height do
+      find_basin({value_left, row_index, column_index - 1}, basin, heightmap_matrix_struct)
+    else
+      basin
+    end
+  end
+
+  defp right_downward_flow(
+         {_height, _row_index, column_index},
+         basin,
+         {_heightmap_matrix, _num_rows, num_columns}
+       )
+       when column_index == num_columns - 1,
+       do: basin
+
+  defp right_downward_flow(
+         {height, row_index, column_index},
+         basin,
+         {heightmap_matrix, _num_rows, _num_columns} = heightmap_matrix_struct
+       ) do
+    value_right =
+      heightmap_matrix
+      |> Enum.at(row_index)
+      |> Enum.at(column_index + 1)
+
+    if value_right != 9 and value_right > height do
+      find_basin({value_right, row_index, column_index + 1}, basin, heightmap_matrix_struct)
+    else
+      basin
+    end
+  end
+
+  defp down_downward_flow(
+         {_height, row_index, _column_index},
+         basin,
+         {_heightmap_matrix, num_rows, _num_columns}
+       )
+       when row_index == num_rows - 1,
+       do: basin
+
+  defp down_downward_flow(
+         {height, row_index, column_index},
+         basin,
+         {heightmap_matrix, _num_rows, _num_columns} = heightmap_matrix_struct
+       ) do
+    value_down =
+      heightmap_matrix
+      |> Enum.at(row_index + 1)
+      |> Enum.at(column_index)
+
+    if value_down != 9 and value_down > height do
+      find_basin({value_down, row_index + 1, column_index}, basin, heightmap_matrix_struct)
+    else
+      basin
+    end
+  end
+
+  defp top_downward_flow({_height, 0, _column_index}, basin, _heightmap_matrix_struct), do: basin
+
+  defp top_downward_flow(
+         {height, row_index, column_index},
+         basin,
+         {heightmap_matrix, _num_rows, _num_columns} = heightmap_matrix_struct
+       ) do
+    value_top =
+      heightmap_matrix
+      |> Enum.at(row_index - 1)
+      |> Enum.at(column_index)
+
+    if value_top != 9 and value_top > height do
+      find_basin({value_top, row_index - 1, column_index}, basin, heightmap_matrix_struct)
+    else
+      basin
+    end
+  end
+
+  defp describe_heightmap_matrix(heightmap_matrix) do
+    num_columns = Util.matrix_column_size(heightmap_matrix)
+    num_rows = length(heightmap_matrix)
+
+    {heightmap_matrix, num_rows, num_columns}
   end
 end
