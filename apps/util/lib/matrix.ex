@@ -46,4 +46,12 @@ defmodule Util.Matrix do
 
     {value, row_index, column_index}
   end
+
+  @spec set(matrix(), integer, integer, any) :: matrix()
+  def set(matrix, row_index, column_index, value) do
+    matrix
+    |> Enum.at(row_index)
+    |> List.replace_at(column_index, value)
+    |> then(&List.replace_at(matrix, row_index, &1))
+  end
 end

@@ -103,7 +103,7 @@ defmodule Day11 do
             |> Map.update!(:number_of_flashes, &(&1 + 1))
             |> Map.update!(:energy_matrix, fn energy_matrix ->
               energy_matrix
-              |> set(row_index, column_index, 0)
+              |> Matrix.set(row_index, column_index, 0)
               |> increment_neighbours(row_index, column_index, num_rows, num_columns)
             end)
           else
@@ -127,15 +127,6 @@ defmodule Day11 do
     {energy_matrix, num_rows, num_columns}
   end
 
-  # Util?
-  defp set(matrix, row_index, column_index, value) do
-    row = Enum.at(matrix, row_index)
-
-    updated_row = List.replace_at(row, column_index, value)
-
-    List.replace_at(matrix, row_index, updated_row)
-  end
-
   defp increment_neighbours(
          energy_matrix,
          pivot_row_index,
@@ -157,7 +148,7 @@ defmodule Day11 do
         if energy == 0 do
           energy_matrix
         else
-          set(energy_matrix, row_index, column_index, energy + 1)
+          Matrix.set(energy_matrix, row_index, column_index, energy + 1)
         end
       end)
     end)
