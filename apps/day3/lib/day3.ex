@@ -50,7 +50,7 @@ defmodule Day3 do
   end
 
   defp build_binary_matrix(diagnostic_report) do
-    Enum.map(diagnostic_report, &String.split(&1, "", trim: true))
+    Util.Matrix.parse_matrix(diagnostic_report)
   end
 
   defp get_last_column_index(binary_matrix) do

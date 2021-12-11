@@ -51,13 +51,7 @@ defmodule Day9 do
   end
 
   defp parse_matrix(heightmap) do
-    Enum.map(heightmap, &parse_matrix_row/1)
-  end
-
-  defp parse_matrix_row(matrix_row) do
-    matrix_row
-    |> String.split("", trim: true)
-    |> Enum.map(&Util.safe_to_integer/1)
+    Util.Matrix.parse_matrix(heightmap, to_integer: true)
   end
 
   defp find_low_points(heightmap_matrix) do

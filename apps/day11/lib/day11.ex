@@ -36,11 +36,7 @@ defmodule Day11 do
   end
 
   defp parse_energy_matrix(octopus_energy_levels) do
-    Enum.map(octopus_energy_levels, fn line ->
-      line
-      |> String.split("", trim: true)
-      |> Enum.map(&Util.safe_to_integer/1)
-    end)
+    Util.Matrix.parse_matrix(octopus_energy_levels, to_integer: true)
   end
 
   defp simulate(energy_matrix, steps) do
