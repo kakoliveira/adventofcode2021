@@ -55,13 +55,13 @@ defmodule Day3 do
 
   defp get_last_column_index(binary_matrix) do
     binary_matrix
-    |> Util.matrix_column_size()
+    |> Util.Matrix.column_size()
     |> Kernel.-(1)
   end
 
   defp get_column_frequencies(binary_matrix, column) do
     binary_matrix
-    |> Util.fetch_matrix_column(column)
+    |> Util.Matrix.fetch_column(column)
     |> Enum.frequencies()
   end
 

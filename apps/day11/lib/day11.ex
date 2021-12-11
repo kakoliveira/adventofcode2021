@@ -123,7 +123,7 @@ defmodule Day11 do
 
   # Util?
   defp describe_energy_matrix(energy_matrix) do
-    num_columns = Util.matrix_column_size(energy_matrix)
+    num_columns = Util.Matrix.column_size(energy_matrix)
     num_rows = length(energy_matrix)
 
     {energy_matrix, num_rows, num_columns}

@@ -258,7 +258,7 @@ defmodule Day9 do
     do: basin
 
   defp describe_heightmap_matrix(heightmap_matrix) do
-    num_columns = Util.matrix_column_size(heightmap_matrix)
+    num_columns = Util.Matrix.column_size(heightmap_matrix)
     num_rows = length(heightmap_matrix)
 
     {heightmap_matrix, num_rows, num_columns}

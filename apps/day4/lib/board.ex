@@ -73,10 +73,10 @@ defmodule Board do
   end
 
   defp vertical_bingo?(board) do
-    last_column_index = Util.matrix_column_size(board) - 1
+    last_column_index = Util.Matrix.column_size(board) - 1
 
     0..last_column_index
-    |> Enum.map(&Util.fetch_matrix_column(board, &1))
+    |> Enum.map(&Util.Matrix.fetch_column(board, &1))
     |> horizontal_bingo?()
   end
 end
