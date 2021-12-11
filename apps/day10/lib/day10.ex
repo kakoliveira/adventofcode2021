@@ -68,6 +68,18 @@ defmodule Day10 do
     |> Enum.sum()
   end
 
+  def solve(part: 2, navigation_subsystem: navigation_subsystem) do
+    navigation_subsystem
+    |> run_syntax_validator()
+    |> Enum.filter(&is_incomplete?/1)
+    |> Enum.map(fn {_status, stack} ->
+      stack
+      |> get_completion_stack()
+      |> score_completion_stack()
+    end)
+    |> get_middle_score()
+  end
+
   defp read_navigation_subsystem(file_path) do
     file_path
     |> FileReader.read()
@@ -112,8 +124,43 @@ defmodule Day10 do
   defp is_corrupted?({:corrupted, _close_char}), do: true
   defp is_corrupted?(_line), do: false
 
+  defp is_incomplete?({:incomplete, _stack}), do: true
+  defp is_incomplete?(_line), do: false
+
+  defp get_completion_stack(stack) do
+    Enum.map(stack, &close_char/1)
+  end
+
+  defp close_char(@open_brackets), do: @close_brackets
+  defp close_char(@open_curly_brackets), do: @close_curly_brackets
+  defp close_char(@open_square_brackets), do: @close_square_brackets
+  defp close_char(@open_arrow), do: @close_arrow
+
+  defp score_completion_stack(completion_stack) do
+    Enum.reduce(completion_stack, 0, fn char, score ->
+      score * 5 + score_completion_character(char)
+    end)
+  end
+
   defp score_illegal_character(@close_brackets), do: 3
   defp score_illegal_character(@close_square_brackets), do: 57
   defp score_illegal_character(@close_curly_brackets), do: 1197
   defp score_illegal_character(@close_arrow), do: 25_137
+
+  defp score_completion_character(@close_brackets), do: 1
+  defp score_completion_character(@close_square_brackets), do: 2
+  defp score_completion_character(@close_curly_brackets), do: 3
+  defp score_completion_character(@close_arrow), do: 4
+
+  defp get_middle_score(scores) do
+    mid_point =
+      scores
+      |> length()
+      |> div(2)
+      |> floor()
+
+    scores
+    |> Enum.sort()
+    |> Enum.at(mid_point)
+  end
 end
