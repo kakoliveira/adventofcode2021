@@ -54,4 +54,12 @@ defmodule Util.Matrix do
     |> List.replace_at(column_index, value)
     |> then(&List.replace_at(matrix, row_index, &1))
   end
+
+  @spec describe(matrix()) :: {matrix(), integer(), integer()}
+  def describe(matrix) do
+    num_columns = column_size(matrix)
+    num_rows = length(matrix)
+
+    {matrix, num_rows, num_columns}
+  end
 end

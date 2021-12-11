@@ -58,7 +58,7 @@ defmodule Day11 do
       number_of_flashes: 0
     }
 
-    {_energy_matrix, num_rows, num_columns} = describe_energy_matrix(energy_matrix)
+    {_energy_matrix, num_rows, num_columns} = Matrix.describe(energy_matrix)
 
     find_sync_step(state, 1, num_rows * num_columns)
   end
@@ -90,7 +90,7 @@ defmodule Day11 do
   end
 
   defp flashes(state) do
-    {_energy_matrix, num_rows, num_columns} = describe_energy_matrix(state.energy_matrix)
+    {_energy_matrix, num_rows, num_columns} = Matrix.describe(state.energy_matrix)
 
     updated_state =
       Enum.reduce(0..(num_rows - 1), state, fn row_index, state ->
@@ -117,14 +117,6 @@ defmodule Day11 do
     else
       flashes(updated_state)
     end
-  end
-
-  # Util?
-  defp describe_energy_matrix(energy_matrix) do
-    num_columns = Matrix.column_size(energy_matrix)
-    num_rows = length(energy_matrix)
-
-    {energy_matrix, num_rows, num_columns}
   end
 
   defp increment_neighbours(

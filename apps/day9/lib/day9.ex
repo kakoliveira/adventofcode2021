@@ -57,7 +57,7 @@ defmodule Day9 do
   end
 
   defp find_low_points(heightmap_matrix) do
-    heightmap_matrix_struct = describe_heightmap_matrix(heightmap_matrix)
+    heightmap_matrix_struct = Matrix.describe(heightmap_matrix)
 
     heightmap_matrix
     |> Enum.with_index()
@@ -141,7 +141,7 @@ defmodule Day9 do
   end
 
   defp get_basins(low_points, heightmap_matrix) do
-    heightmap_matrix_struct = describe_heightmap_matrix(heightmap_matrix)
+    heightmap_matrix_struct = Matrix.describe(heightmap_matrix)
 
     Enum.map(low_points, &find_basin(&1, %{}, heightmap_matrix_struct))
   end
@@ -252,11 +252,4 @@ defmodule Day9 do
 
   defp downward_flow(_point, _adjancent_height, basin, _heightmap_matrix_struct),
     do: basin
-
-  defp describe_heightmap_matrix(heightmap_matrix) do
-    num_columns = Matrix.column_size(heightmap_matrix)
-    num_rows = length(heightmap_matrix)
-
-    {heightmap_matrix, num_rows, num_columns}
-  end
 end

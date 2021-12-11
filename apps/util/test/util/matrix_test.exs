@@ -77,4 +77,15 @@ defmodule Util.MatrixTest do
              ] = updated_matrix
     end
   end
+
+  describe "describe/1" do
+    test "gets matrix form info" do
+      matrix = [
+        ["1", "2"],
+        ["3", "4"]
+      ]
+
+      assert {^matrix, 2, 2} = Matrix.describe(matrix)
+    end
+  end
 end
