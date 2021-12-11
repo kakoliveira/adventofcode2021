@@ -29,6 +29,17 @@ defmodule Util.MatrixTest do
     end
   end
 
+  describe "get_point/3" do
+    test "gets full point info" do
+      matrix = [
+        ["1", "2"],
+        ["3", "4"]
+      ]
+
+      assert {"4", 1, 1} = Matrix.get_point(matrix, 1, 1)
+    end
+  end
+
   describe "column_size/1" do
     test "gets matrix column size" do
       matrix = [

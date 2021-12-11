@@ -3,6 +3,8 @@ defmodule Day9 do
   Day 9 puzzle solutions
   """
 
+  alias Util.Matrix
+
   # Guards
   defguard first_column?(column_index) when column_index == 0
   defguard last_column?(column_index, num_columns) when column_index == num_columns - 1
@@ -51,7 +53,7 @@ defmodule Day9 do
   end
 
   defp parse_matrix(heightmap) do
-    Util.Matrix.parse_matrix(heightmap, to_integer: true)
+    Matrix.parse_matrix(heightmap, to_integer: true)
   end
 
   defp find_low_points(heightmap_matrix) do
@@ -115,7 +117,7 @@ defmodule Day9 do
 
   defp less_than_down?({height, row_index, column_index}, heightmap_matrix, _num_rows) do
     {value_bellow, _row_index, _column_index} =
-      get_point(heightmap_matrix, row_index + 1, column_index)
+      Matrix.get_point(heightmap_matrix, row_index + 1, column_index)
 
     height < value_bellow
   end
@@ -126,7 +128,7 @@ defmodule Day9 do
 
   defp less_than_up?({height, row_index, column_index}, heightmap_matrix, _num_rows) do
     {value_above, _row_index, _column_index} =
-      get_point(heightmap_matrix, row_index - 1, column_index)
+      Matrix.get_point(heightmap_matrix, row_index - 1, column_index)
 
     height < value_above
   end
@@ -168,7 +170,7 @@ defmodule Day9 do
          {heightmap_matrix, _num_rows, _num_columns} = heightmap_matrix_struct
        ) do
     heightmap_matrix
-    |> get_point(row_index, column_index - 1)
+    |> Matrix.get_point(row_index, column_index - 1)
     |> downward_flow(
       height,
       basin,
@@ -190,7 +192,7 @@ defmodule Day9 do
          {heightmap_matrix, _num_rows, _num_columns} = heightmap_matrix_struct
        ) do
     heightmap_matrix
-    |> get_point(row_index, column_index + 1)
+    |> Matrix.get_point(row_index, column_index + 1)
     |> downward_flow(
       height,
       basin,
@@ -212,7 +214,7 @@ defmodule Day9 do
          {heightmap_matrix, _num_rows, _num_columns} = heightmap_matrix_struct
        ) do
     heightmap_matrix
-    |> get_point(row_index + 1, column_index)
+    |> Matrix.get_point(row_index + 1, column_index)
     |> downward_flow(
       height,
       basin,
@@ -230,7 +232,7 @@ defmodule Day9 do
          {heightmap_matrix, _num_rows, _num_columns} = heightmap_matrix_struct
        ) do
     heightmap_matrix
-    |> get_point(row_index - 1, column_index)
+    |> Matrix.get_point(row_index - 1, column_index)
     |> downward_flow(
       height,
       basin,
@@ -252,18 +254,9 @@ defmodule Day9 do
     do: basin
 
   defp describe_heightmap_matrix(heightmap_matrix) do
-    num_columns = Util.Matrix.column_size(heightmap_matrix)
+    num_columns = Matrix.column_size(heightmap_matrix)
     num_rows = length(heightmap_matrix)
 
     {heightmap_matrix, num_rows, num_columns}
-  end
-
-  defp get_point(heightmap_matrix, row_index, column_index) do
-    height =
-      heightmap_matrix
-      |> Enum.at(row_index)
-      |> Enum.at(column_index)
-
-    {height, row_index, column_index}
   end
 end

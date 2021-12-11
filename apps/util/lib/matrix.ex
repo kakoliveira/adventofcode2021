@@ -36,4 +36,14 @@ defmodule Util.Matrix do
   def fetch_column(matrix, column) do
     Enum.map(matrix, &Enum.at(&1, column))
   end
+
+  @spec get_point(matrix(), integer(), integer()) :: {any(), integer(), integer()}
+  def get_point(matrix, row_index, column_index) do
+    value =
+      matrix
+      |> Enum.at(row_index)
+      |> Enum.at(column_index)
+
+    {value, row_index, column_index}
+  end
 end

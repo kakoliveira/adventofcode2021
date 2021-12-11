@@ -3,6 +3,8 @@ defmodule Day11 do
   Day 11 puzzle solutions
   """
 
+  alias Util.Matrix
+
   @doc """
       * `:part` - Possible values: `1` or `2`. Represents both parts of the puzzle.
       * `:file_path` - When defined, the octopus energy levels are read from this file instead of the next option.
@@ -36,7 +38,7 @@ defmodule Day11 do
   end
 
   defp parse_energy_matrix(octopus_energy_levels) do
-    Util.Matrix.parse_matrix(octopus_energy_levels, to_integer: true)
+    Matrix.parse_matrix(octopus_energy_levels, to_integer: true)
   end
 
   defp simulate(energy_matrix, steps) do
@@ -94,7 +96,7 @@ defmodule Day11 do
       Enum.reduce(0..(num_rows - 1), state, fn row_index, state ->
         Enum.reduce(0..(num_columns - 1), state, fn column_index, state ->
           {current_energy, ^row_index, ^column_index} =
-            get_point(state.energy_matrix, row_index, column_index)
+            Matrix.get_point(state.energy_matrix, row_index, column_index)
 
           if current_energy >= 10 do
             state
@@ -119,20 +121,10 @@ defmodule Day11 do
 
   # Util?
   defp describe_energy_matrix(energy_matrix) do
-    num_columns = Util.Matrix.column_size(energy_matrix)
+    num_columns = Matrix.column_size(energy_matrix)
     num_rows = length(energy_matrix)
 
     {energy_matrix, num_rows, num_columns}
-  end
-
-  # Util?
-  defp get_point(energy_matrix, row_index, column_index) do
-    energy =
-      energy_matrix
-      |> Enum.at(row_index)
-      |> Enum.at(column_index)
-
-    {energy, row_index, column_index}
   end
 
   # Util?
@@ -159,7 +151,8 @@ defmodule Day11 do
 
     Enum.reduce(from_row..to_row, energy_matrix, fn row_index, energy_matrix ->
       Enum.reduce(from_column..to_column, energy_matrix, fn column_index, energy_matrix ->
-        {energy, ^row_index, ^column_index} = get_point(energy_matrix, row_index, column_index)
+        {energy, ^row_index, ^column_index} =
+          Matrix.get_point(energy_matrix, row_index, column_index)
 
         if energy == 0 do
           energy_matrix
