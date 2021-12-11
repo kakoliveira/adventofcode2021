@@ -22,7 +22,7 @@ defmodule Day11 do
     octopus_energy_levels
     |> parse_energy_matrix()
     |> simulate(100)
-    |> get_number_of_flashes()
+    |> Map.get(:number_of_flashes)
   end
 
   def solve(part: 2, octopus_energy_levels: octopus_energy_levels) do
@@ -95,20 +95,9 @@ defmodule Day11 do
     updated_state =
       Enum.reduce(0..(num_rows - 1), state, fn row_index, state ->
         Enum.reduce(0..(num_columns - 1), state, fn column_index, state ->
-          {current_energy, ^row_index, ^column_index} =
-            Matrix.get_point(state.energy_matrix, row_index, column_index)
-
-          if current_energy >= 10 do
-            state
-            |> Map.update!(:number_of_flashes, &(&1 + 1))
-            |> Map.update!(:energy_matrix, fn energy_matrix ->
-              energy_matrix
-              |> Matrix.set(row_index, column_index, 0)
-              |> increment_neighbours(row_index, column_index, num_rows, num_columns)
-            end)
-          else
-            state
-          end
+          state.energy_matrix
+          |> Matrix.get_point(row_index, column_index)
+          |> handle_flash(state, num_rows, num_columns)
         end)
       end)
 
@@ -118,6 +107,19 @@ defmodule Day11 do
       flashes(updated_state)
     end
   end
+
+  defp handle_flash({current_energy, row_index, column_index}, state, num_rows, num_columns)
+       when current_energy >= 10 do
+    state
+    |> Map.update!(:number_of_flashes, &(&1 + 1))
+    |> Map.update!(:energy_matrix, fn energy_matrix ->
+      energy_matrix
+      |> Matrix.set(row_index, column_index, 0)
+      |> increment_neighbours(row_index, column_index, num_rows, num_columns)
+    end)
+  end
+
+  defp handle_flash(_point, state, _num_rows, _num_columns), do: state
 
   defp increment_neighbours(
          energy_matrix,
@@ -134,17 +136,16 @@ defmodule Day11 do
 
     Enum.reduce(from_row..to_row, energy_matrix, fn row_index, energy_matrix ->
       Enum.reduce(from_column..to_column, energy_matrix, fn column_index, energy_matrix ->
-        {energy, ^row_index, ^column_index} =
-          Matrix.get_point(energy_matrix, row_index, column_index)
-
-        if energy == 0 do
-          energy_matrix
-        else
-          Matrix.set(energy_matrix, row_index, column_index, energy + 1)
-        end
+        energy_matrix
+        |> Matrix.get_point(row_index, column_index)
+        |> increment_neighbour(energy_matrix)
       end)
     end)
   end
 
-  defp get_number_of_flashes(%{number_of_flashes: number_of_flashes}), do: number_of_flashes
+  defp increment_neighbour({0, _row_index, _column_index}, energy_matrix), do: energy_matrix
+
+  defp increment_neighbour({energy, row_index, column_index}, energy_matrix) do
+    Matrix.set(energy_matrix, row_index, column_index, energy + 1)
+  end
 end
