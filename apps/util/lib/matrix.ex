@@ -5,7 +5,7 @@ defmodule Util.Matrix do
 
   @type matrix :: list(list())
 
-  @spec parse_matrix(list(String.t())) :: matrix()
+  @spec parse_matrix(list(String.t()), keyword()) :: matrix()
   def parse_matrix(lines, opts \\ []) do
     Enum.map(lines, &parse_matrix_row(&1, opts))
   end
