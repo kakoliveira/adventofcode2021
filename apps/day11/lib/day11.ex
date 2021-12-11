@@ -23,6 +23,12 @@ defmodule Day11 do
     |> get_number_of_flashes()
   end
 
+  def solve(part: 2, octopus_energy_levels: octopus_energy_levels) do
+    octopus_energy_levels
+    |> parse_energy_matrix()
+    |> find_sync_step()
+  end
+
   defp read_octopus_energy_levels(file_path) do
     file_path
     |> FileReader.read()
@@ -46,6 +52,29 @@ defmodule Day11 do
     Enum.reduce(1..steps, state, fn _step, state ->
       simulate_step(state)
     end)
+  end
+
+  defp find_sync_step(energy_matrix) do
+    state = %{
+      energy_matrix: energy_matrix,
+      number_of_flashes: 0
+    }
+
+    {_energy_matrix, num_rows, num_columns} = describe_energy_matrix(energy_matrix)
+
+    find_sync_step(state, 1, num_rows * num_columns)
+  end
+
+  defp find_sync_step(state, step, target_number_of_flashes) do
+    updated_state = simulate_step(state)
+
+    number_of_flashes_on_step = updated_state.number_of_flashes - state.number_of_flashes
+
+    if number_of_flashes_on_step == target_number_of_flashes do
+      step
+    else
+      find_sync_step(updated_state, step + 1, target_number_of_flashes)
+    end
   end
 
   defp simulate_step(state) do
