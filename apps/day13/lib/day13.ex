@@ -24,6 +24,15 @@ defmodule Day13 do
     |> Enum.count()
   end
 
+  def solve(part: 2, sheet: sheet) do
+    %{points: points, folds: folds} = parse_sheet(sheet)
+
+    folds
+    |> Enum.reduce(points, &apply_fold/2)
+    |> tap(&plot/1)
+    |> Enum.count()
+  end
+
   defp read_sheet(file_path) do
     file_path
     |> FileReader.read()
@@ -88,5 +97,32 @@ defmodule Day13 do
 
   defp pivot(coordinate, pivot) do
     2 * pivot - coordinate
+  end
+
+  defp plot(points) do
+    {from_x, to_x} = get_range(points, &x_mapper/1)
+    {from_y, to_y} = get_range(points, &y_mapper/1)
+
+    Enum.reduce(from_y..to_y, "", fn y, acc ->
+      Enum.reduce(from_x..to_x, acc, fn x, acc ->
+        if Map.has_key?(points, {x, y}) do
+          "#{acc}#"
+        else
+          "#{acc} "
+        end
+      end)
+      |> IO.puts()
+
+      ""
+    end)
+  end
+
+  defp x_mapper({{x, _y}, true}), do: x
+  defp y_mapper({{_x, y}, true}), do: y
+
+  defp get_range(points, mapper) when is_function(mapper, 1) do
+    points
+    |> Enum.map(mapper)
+    |> Enum.min_max()
   end
 end
