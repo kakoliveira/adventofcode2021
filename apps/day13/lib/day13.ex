@@ -72,27 +72,19 @@ defmodule Day13 do
   end
 
   defp apply_fold(fold, points) do
-    {points_to_fold, fixed_points} = Enum.split_with(points, &point_to_fold?(&1, fold))
-
-    points_to_fold
-    |> Enum.reduce(%{}, &fold_point(&1, fold, &2))
-    |> Map.merge(Map.new(fixed_points))
+    Enum.reduce(points, %{}, &fold_point(&1, fold, &2))
   end
 
-  defp point_to_fold?({{x, _y}, true}, {"x", pivot}) do
-    x > pivot
-  end
-
-  defp point_to_fold?({{_x, y}, true}, {"y", pivot}) do
-    y > pivot
-  end
-
-  defp fold_point({{x, y}, true}, {"x", pivot}, new_points) do
+  defp fold_point({{x, y}, true}, {"x", pivot}, new_points) when x > pivot do
     Map.put(new_points, {pivot(x, pivot), y}, true)
   end
 
-  defp fold_point({{x, y}, true}, {"y", pivot}, new_points) do
+  defp fold_point({{x, y}, true}, {"y", pivot}, new_points) when y > pivot do
     Map.put(new_points, {x, pivot(y, pivot)}, true)
+  end
+
+  defp fold_point({{x, y}, true}, _fold, new_points) do
+    Map.put(new_points, {x, y}, true)
   end
 
   defp pivot(coordinate, pivot) do
