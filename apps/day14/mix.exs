@@ -25,8 +25,7 @@ defmodule Day14.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # {:file_reader, in_umbrella: true},
-      # {:util, in_umbrella: true}
+      {:file_reader, in_umbrella: true}
     ]
   end
 end
