@@ -16,11 +16,18 @@ defmodule Day14 do
   end
 
   def solve(part: 1, polymerization: polymerization) do
+    calculate_polymer_metric(polymerization, 10)
+  end
+
+  def solve(part: 2, polymerization: polymerization) do
+    calculate_polymer_metric(polymerization, 40)
+  end
+
+  defp calculate_polymer_metric(polymerization, steps) do
     %{template: template, pair_insertion_rules: rules} = parse_polymerization(polymerization)
 
     template
-    |> compute_polymer(rules, 10)
-    |> Enum.frequencies()
+    |> compute_polymer(rules, steps)
     |> Enum.min_max_by(&elem(&1, 1))
     |> subtract_element_quantities()
   end
@@ -45,14 +52,21 @@ defmodule Day14 do
   end
 
   defp compute_polymer(template, rules, steps) do
+    last_element = List.last(template)
+
     template
     |> Enum.chunk_every(2, 1, :discard)
-    |> then(
-      &Enum.reduce(1..steps, &1, fn _step, template ->
-        pair_insertion_process(template, rules)
-      end)
-    )
+    |> Enum.map(&run_for_chunk(&1, steps, rules))
+    |> Enum.reduce(%{}, &Map.merge(&1, &2, fn _key, count1, count2 -> count1 + count2 end))
+    |> Map.update!(last_element, &(&1 + 1))
+  end
+
+  defp run_for_chunk(chunk, steps, rules) do
+    Enum.reduce(1..steps, [chunk], fn _step, template ->
+      pair_insertion_process(template, rules)
+    end)
     |> unchunk()
+    |> Enum.frequencies()
   end
 
   defp pair_insertion_process(template, rules) do
@@ -89,14 +103,7 @@ defmodule Day14 do
   end
 
   defp unchunk(chunked_template) do
-    last_element =
-      chunked_template
-      |> List.last()
-      |> List.last()
-
-    chunked_template
-    |> Enum.map(&List.first/1)
-    |> Kernel.++([last_element])
+    Enum.map(chunked_template, &List.first/1)
   end
 
   defp subtract_element_quantities({
