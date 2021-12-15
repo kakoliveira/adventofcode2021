@@ -57,33 +57,44 @@ defmodule Day14 do
     template
     |> Enum.chunk_every(2, 1, :discard)
     |> Enum.map(&run_for_chunk(&1, steps, rules))
-    |> Enum.reduce(%{}, &Map.merge(&1, &2, fn _key, count1, count2 -> count1 + count2 end))
+    |> Enum.reduce(%{}, &merge_frequencies(&1, &2))
     |> Map.update!(last_element, &(&1 + 1))
   end
 
   defp run_for_chunk(chunk, steps, rules) do
-    Enum.reduce(1..steps, [chunk], fn _step, template ->
-      pair_insertion_process(template, rules)
-    end)
-    |> unchunk()
+    chunk
+    |> List.first()
+    |> List.wrap()
     |> Enum.frequencies()
+    |> merge_frequencies(recursive(chunk, rules, 0, steps))
   end
 
-  defp pair_insertion_process(template, rules) do
-    template
-    |> Enum.reduce([], fn pair, acc ->
-      apply_rules_to_pair(pair, rules) ++ acc
+  defp recursive(_chunk, _rules, steps, steps), do: %{}
+
+  defp recursive(chunk, rules, current_step, steps) do
+    {inserted_element, new_pairs} = apply_rules_to_pair(chunk, rules)
+
+    [pair1, pair2] = Enum.reverse(new_pairs)
+
+    [{inserted_element, 1}]
+    |> Map.new()
+    |> merge_frequencies(recursive(pair1, rules, current_step + 1, steps))
+    |> merge_frequencies(recursive(pair2, rules, current_step + 1, steps))
+  end
+
+  defp merge_frequencies(partial_frequency1, partial_frequency2) do
+    Map.merge(partial_frequency1, partial_frequency2, fn _key, count1, count2 ->
+      count1 + count2
     end)
-    |> Enum.reverse()
   end
 
   defp apply_rules_to_pair([element1, element2] = pair, rules) do
     element_to_insert = get_element_to_insert(pair, rules)
 
     if is_nil(element_to_insert) do
-      [pair]
+      {element_to_insert, [pair]}
     else
-      [[element_to_insert, element2], [element1, element_to_insert]]
+      {element_to_insert, [[element_to_insert, element2], [element1, element_to_insert]]}
     end
   end
 
@@ -100,10 +111,6 @@ defmodule Day14 do
 
   defp rule_applies?({target_pair, _element_to_insert}, pair) do
     target_pair == pair
-  end
-
-  defp unchunk(chunked_template) do
-    Enum.map(chunked_template, &List.first/1)
   end
 
   defp subtract_element_quantities({
