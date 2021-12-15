@@ -66,7 +66,7 @@ defmodule Day14Test do
     test "challange" do
       file_path = Path.join(File.cwd!(), "input.txt")
 
-      assert 3230 == Day14.solve(part: 2, file_path: file_path)
+      assert 3_542_388_214_529 == Day14.solve(part: 2, file_path: file_path)
     end
   end
 end
