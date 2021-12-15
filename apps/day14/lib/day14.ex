@@ -41,14 +41,14 @@ defmodule Day14 do
   defp parse_polymerization([template | rules]) do
     %{
       template: String.split(template, "", trim: true),
-      pair_insertion_rules: Enum.map(rules, &parse_rule/1)
+      pair_insertion_rules: Enum.reduce(rules, %{}, &parse_rule/2)
     }
   end
 
-  defp parse_rule(rule) do
+  defp parse_rule(rule, rules) do
     [pair, insertion] = String.split(rule, " -> ", trim: true)
 
-    {pair, insertion}
+    Map.put(rules, pair, insertion)
   end
 
   defp compute_polymer(template, rules, steps) do
@@ -89,28 +89,13 @@ defmodule Day14 do
   end
 
   defp apply_rules_to_pair([element1, element2] = pair, rules) do
-    element_to_insert = get_element_to_insert(pair, rules)
+    element_to_insert = Map.get(rules, Enum.join(pair))
 
     if is_nil(element_to_insert) do
       {element_to_insert, [pair]}
     else
       {element_to_insert, [[element_to_insert, element2], [element1, element_to_insert]]}
     end
-  end
-
-  defp get_element_to_insert(pair, rules) do
-    pair = Enum.join(pair)
-
-    rules
-    |> Enum.find(&rule_applies?(&1, pair))
-    |> get_element_to_insert()
-  end
-
-  defp get_element_to_insert({_rule_pair, element_to_insert}), do: element_to_insert
-  defp get_element_to_insert(_rule), do: nil
-
-  defp rule_applies?({target_pair, _element_to_insert}, pair) do
-    target_pair == pair
   end
 
   defp subtract_element_quantities({
